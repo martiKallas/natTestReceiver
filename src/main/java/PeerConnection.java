@@ -117,9 +117,15 @@ public class PeerConnection {
         testServer.start();
     }
 
-    public int connectNatPunch(){
-        localPort = manager.getNextSocket();
-        if (localPort == -1) return 1;
+    public int connectNatPunch(int port){
+        localPort = port;
+        try{
+            manager.pingStunServer(localPort);
+        }
+        catch(IOException e){
+            e.printStackTrace();
+            return -1;
+        }
         try {
             connectionClient = new Socket();
             connectionClient.setReuseAddress(true);
@@ -128,8 +134,12 @@ public class PeerConnection {
             System.out.println("Attempting connection, ip:port " + peerIP + ":" + peerPort);
             connectionClient.connect(new InetSocketAddress(peerIP, peerPort), 15*1000);
             //TODO: share keys and verify tokens
-            sendMessage("Initial message from test nat receiver");
-            System.out.println(getMessage());
+            sendMessage("Initial message from test nat receiver. This will echo 5 messages you send.");
+            for(int i = 0; i < 5; i++){
+                String msg = getMessage();
+                msg = "Test receiver received: '" + msg + "'";
+                sendMessage(msg);
+            }
             connectionClient.close();
         } catch (SocketException s) {
             s.printStackTrace();

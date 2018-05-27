@@ -35,9 +35,37 @@ public class ConnectionManager {
         user = usr;
     }
 
+
+    //Returns 0 on sucessful ping of stun server, -1 on timeout
+    public synchronized int pingStunServer(int port) throws IOException {
+        Socket sock = new Socket();
+        sock.setReuseAddress(true);
+        sock.bind(new InetSocketAddress(port));
+        sock.connect(new InetSocketAddress(STUN_ADDRESS, STUN_PORT), STUN_TIMEOUT);
+        STUNRegistration validation = new STUNRegistration(user, API_TOKEN);
+        String json = gson.toJson(validation);
+        System.out.println(json);
+        sendMessage(json, sock);
+        String res = "";
+        BufferedReader input = getBuffer(sock);
+        try {
+            res = input.readLine();
+        }
+        catch(SocketTimeoutException e){
+            e.printStackTrace();
+            System.out.println("Socket receive timeout");
+            sock.close();
+            return -1;
+        }
+        sock.close();
+        System.out.println("Response:" + res);
+        System.out.println("Port: " + port);
+        return 0;
+    }
+
     public synchronized int getNextSocket(){
         try {
-            findNextSocket();
+            findAvailableSocket();
         }
         catch(SocketException e){
             e.printStackTrace();
@@ -46,39 +74,18 @@ public class ConnectionManager {
         return nextPort;
     }
 
-    private void findNextSocket() throws SocketException {
+    //
+    private void findAvailableSocket() throws SocketException {
         if (nextPort > 65535) throw new SocketException();
-        boolean socketFound = false;
-        while (!socketFound) {
+        int check = 0;
+        while (true) {
             try {
-                nextSocket = new Socket();
-                nextSocket.setReuseAddress(true);
-                nextSocket.bind(new InetSocketAddress(nextPort));
-                nextSocket.connect(new InetSocketAddress(STUN_ADDRESS, STUN_PORT), STUN_TIMEOUT);
-                STUNRegistration validation = new STUNRegistration(user, API_TOKEN);
-                String json = gson.toJson(validation);
-                //System.out.println(json);
-                sendMessage(json);
-                String res = "";
-                BufferedReader input = getBuffer(nextSocket);
-                try {
-                    res = input.readLine();
-                }
-                catch(SocketTimeoutException e){
-                    e.printStackTrace();
-                    System.out.println("Socket receive timeout");
-                    nextSocket.close();
-                    return;
-                }
-                nextSocket.close();
-                System.out.println("Response from STUN:" + res);
-                //System.out.println("Port: " + nextPort);
-                socketFound = true;
+                check = pingStunServer(nextPort);
+                if (check == -1) break;
+                else if (check == 0) break;
             }
             catch(IOException e){
-                e.printStackTrace();
                 nextPort++;
-                System.out.println("Port incremented: " + nextPort);
             }
         }
     }
@@ -100,8 +107,8 @@ public class ConnectionManager {
     }
 
 
-    private void sendMessage(String message) throws IOException {
-        PrintWriter out = writeToBuffer(nextSocket);
+    private void sendMessage(String message, Socket socket) throws IOException {
+        PrintWriter out = writeToBuffer(socket);
         out.println(message);
     }
 

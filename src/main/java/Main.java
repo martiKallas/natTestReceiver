@@ -59,7 +59,7 @@ public class Main {
         System.out.println("Attempting to connect to " + req.requestingIPaddress + ":" + req.requestingPort);
         try {
             PeerConnection connection = new PeerConnection(user, req);
-            connection.connectNatPunch();
+            connection.connectNatPunch(port);
         }
         catch(IOException e){
             e.printStackTrace();
@@ -73,10 +73,7 @@ public class Main {
             if (check > 0 && !contains) {
                 chatRequests.add(req);
                 attemptConnection(req);
-                port = manager.getNextSocket();
-                if (port == -1){
-                    System.out.println("error finding port");
-                }
+
             }//within timeframe - accept/reject
         }
         return 0;
@@ -108,6 +105,7 @@ public class Main {
         port = manager.getNextSocket();
         if (port == -1){
             System.out.println("error finding port");
+            return;
         }
         while(true) {
             //find socket and ping STUN server
@@ -120,7 +118,7 @@ public class Main {
             newRequests.clear();
             try {
                 client.getChatRequests(user, newRequests);
-                int connectionAccepted = handleRequests(newRequests);
+                handleRequests(newRequests);
             }
             catch (IOException e) {
                 e.printStackTrace();
