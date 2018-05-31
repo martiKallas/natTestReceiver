@@ -19,7 +19,7 @@ dependencies {
 }
 
 jar {
-    baseName= 'testNat'
+    baseName= 'testNatReceiver'
     version= '0.1'
 
     manifest{

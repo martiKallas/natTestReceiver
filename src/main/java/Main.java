@@ -8,13 +8,13 @@ import java.util.TimeZone;
 
 
 public class Main {
-    static String USERNAME = "testnatclient";
-    static String PASSWORD = "guest";
+    static String USERNAME = "receivertester";
+    static String PASSWORD = "123";
     static UserData user;
     static int REQ_LISTEN_REFRESH = 2*1000;
     static int MAX_REQUEST_DIFF = 10*1000;
     static ConnectionManager manager;
-    static int port = 9005;
+    static int port = 51237;
     static private ArrayList<ChatRequest> chatRequests = new ArrayList<>();
     static private ArrayList<PeerConnection> connections = new ArrayList<>();
 
@@ -23,14 +23,14 @@ public class Main {
         //TODO:
     }
 
-    static private int getDateDifference(String dateFormat){
+    static private int getDateDifference(String requested, String current){
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMDD_HHmmss");
         try {
-            Date input = format.parse(dateFormat);
+            Date req = format.parse(requested);
+            Date now = format.parse(current);
             //Date current = Calendar.getInstance(TimeZone.getTimeZone("America/Los_Angeles")).getTime();
-            Date current = Calendar.getInstance(TimeZone.getTimeZone("America/Chicago")).getTime();
-            long diff = current.getTime() - input.getTime();
-            //System.out.println("Difference: " + diff);
+            long diff = now.getTime() - req.getTime();
+            System.out.println("Difference: " + diff);
             if (diff < MAX_REQUEST_DIFF){
                 //System.out.println("Request found less than diff: " + diff);
                 return (int)diff;
@@ -66,9 +66,9 @@ public class Main {
         }
     }
 
-    static private int handleRequests(ArrayList<ChatRequest> newRequests){
+    static private int handleRequests(ArrayList<ChatRequest> newRequests, String currentTime){
         for(ChatRequest req : newRequests) {
-            int check = getDateDifference(req.date);
+            int check = getDateDifference(req.date, currentTime);
             boolean contains = requestsContains(req);
             if (check > 0 && !contains) {
                 chatRequests.add(req);
@@ -107,9 +107,9 @@ public class Main {
             System.out.println("error finding port");
             return;
         }
+        ArrayList<ChatRequest> newRequests = new ArrayList<>();
         while(true) {
             //find socket and ping STUN server
-            ArrayList<ChatRequest> newRequests = new ArrayList<>();
             if (loopCount > 5) {
                 removeStaleRequests();
                 System.out.println("Still here");
@@ -117,8 +117,9 @@ public class Main {
             }
             newRequests.clear();
             try {
-                client.getChatRequests(user, newRequests);
-                handleRequests(newRequests);
+                String currentTime = client.getChatRequests(user, newRequests);
+                //System.out.println("Size of requests: " + newRequests.size());
+                handleRequests(newRequests, currentTime);
             }
             catch (IOException e) {
                 e.printStackTrace();
