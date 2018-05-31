@@ -80,6 +80,14 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        if (args.length == 2){
+            USERNAME = args[0];
+            PASSWORD = args[1];
+        }
+        else if (args.length != 0){
+            System.out.println("Usage: <username> <password>");
+            return;
+        }
         user = new UserData();
         OkClient client = new OkClient();
         user.username = USERNAME;
