@@ -85,7 +85,11 @@ public class Main {
             PASSWORD = args[1];
         }
         else if (args.length != 0){
-            System.out.println("Usage: <username> <password>");
+            System.out.println("Usage 1: <username> <password>");
+            System.out.println("   Logs into <username> with <password> and waits for requests");
+            System.out.println("Usage 2:");
+            System.out.println("   Logs into " + USERNAME + " and waits for requests");
+
             return;
         }
         user = new UserData();
