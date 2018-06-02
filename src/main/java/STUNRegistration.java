@@ -9,12 +9,14 @@ public class STUNRegistration {
     public String username;
     public String token;
     public String localIPaddress;
+    public int port;
 
 
-    public STUNRegistration(UserData user, String api_token){
+    public STUNRegistration(UserData user, String api_token, int port){
         API_TOKEN = api_token;
         username = user.username;
         token = user.token;
+        this.port = port;
         try {
             localIPaddress = findLocalIPAddress();
         } catch (UnknownHostException e) {
