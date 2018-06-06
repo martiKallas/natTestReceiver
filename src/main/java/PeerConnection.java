@@ -183,7 +183,8 @@ public class PeerConnection {
                 connectionClient.close();
             } catch (SocketException s) {
                 s.printStackTrace();
-                return -1;
+            } catch (SocketTimeoutException to){
+                to.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
                 return -1;
